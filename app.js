@@ -63,7 +63,7 @@ const wordNumbers={'یک':1,'یه':1,'دو':2,'سه':3,'چهار':4,'پنج':5,'
 function requestedMinutes(raw){
   const s=normalize(raw);
   let m=s.match(/(\d+)\s*(ساعت|ساعته|دقیقه)/);
-  if(m)return Math.max(10,Math.min(480,Number(m[1])*(m[2]==='دقیقه'?1:60)));
+  if(m)return Math.max(20,Math.min(480,Number(m[1])*(m[2]==='دقیقه'?1:60)));
   if(/نیم\s*ساعت/.test(s))return 30;
   for(const [w,n] of Object.entries(wordNumbers)){
     if(new RegExp(w+'\\s*(ساعت|ساعته)').test(s))return n*60;
@@ -143,7 +143,7 @@ function assistantReply(raw){
   }
   if(sport)push('ورزش یا پیاده‌روی سبک','ورزش',20);
   if(fun)push('زمان تفریح و سرگرمی','تفریح',20);
-  if(rest&&!energyLow)push('استراحت و فاصله گرفتن از صفحه‌نمایش','استراحت',15);
+  if(rest&&!energyLow)push('استراحت و فاصله گرفتن از صفحه‌نمایش','استراحت',15);\n  if(energyLow&&!study&&!homework&&!sport&&!fun){push('شروع آرام: مرور کوتاه یک درس','مطالعه',20);push('استراحت کوتاه','استراحت',10);}
   if(!plan.length&&openTasks.length&&/برنامه|امروز|بچین/.test(s)){
     openTasks.slice(0,4).forEach(t=>push(t.title,t.category,Number(t.duration)||25));
   }
@@ -152,15 +152,18 @@ function assistantReply(raw){
   }
 
   const budget=minutes||Math.max(60,Math.min(150,plan.reduce((a,x)=>a+x.duration,0)+15));
-  const breaks=Math.min(2,Math.max(0,Math.floor((plan.length-1)/2)));
-  const workBudget=Math.max(15,budget-breaks*10);
+  let breaks=Math.min(2,Math.max(0,Math.floor((plan.length-1)/2)));
+  let workBudget=Math.max(15,budget-breaks*10);
+  if(plan.length*10>workBudget)plan.splice(Math.max(1,Math.floor(workBudget/10)));
+  breaks=Math.min(2,Math.max(0,Math.floor((plan.length-1)/2)));
+  workBudget=Math.max(15,budget-breaks*10);
   const desired=plan.reduce((a,x)=>a+x.duration,0);
   if(desired>workBudget){
     let left=workBudget;
     plan.forEach((x,i)=>{
-      const remaining=plan.length-i;
-      x.duration=i===plan.length-1?left:Math.max(10,Math.floor(workBudget*x.duration/desired));
-      left-=x.duration;
+      const reserve=(plan.length-i-1)*10;
+      const take=i===plan.length-1?left:Math.max(10,Math.min(x.duration,left-reserve));
+      x.duration=take;left-=take;
     });
   }
   const finalPlan=[];
