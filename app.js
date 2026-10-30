@@ -143,7 +143,8 @@ function assistantReply(raw){
   }
   if(sport)push('ورزش یا پیاده‌روی سبک','ورزش',20);
   if(fun)push('زمان تفریح و سرگرمی','تفریح',20);
-  if(rest&&!energyLow)push('استراحت و فاصله گرفتن از صفحه‌نمایش','استراحت',15);\n  if(energyLow&&!study&&!homework&&!sport&&!fun){push('شروع آرام: مرور کوتاه یک درس','مطالعه',20);push('استراحت کوتاه','استراحت',10);}
+  if(rest&&!energyLow)push('استراحت و فاصله گرفتن از صفحه‌نمایش','استراحت',15);
+  if(energyLow&&!study&&!homework&&!sport&&!fun){push('شروع آرام: مرور کوتاه یک درس','مطالعه',20);push('استراحت کوتاه','استراحت',10);}
   if(!plan.length&&openTasks.length&&/برنامه|امروز|بچین/.test(s)){
     openTasks.slice(0,4).forEach(t=>push(t.title,t.category,Number(t.duration)||25));
   }
