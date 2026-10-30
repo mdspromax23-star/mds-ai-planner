@@ -9,7 +9,7 @@
 <div class="layout">
 <aside class="sidebar" id="sidebar"><div class="brand"><span class="logo">M</span><span><b>MDS</b><small>AI PLANNER</small></span></div>
 <div class="profile"><span class="avatar">M</span><span><b>برنامه‌ریز من</b><small>نسخه شخصی</small></span><i></i></div>
-<nav><button class="nav active" data-page="home">◫　داشبورد</button><button class="nav" data-page="tasks">✓　کارهای من</button><button class="nav" data-page="assistant">✦　دستیار برنامه‌ریز</button><button class="nav" data-page="reports">▥　گزارش پیشرفت</button></nav>
+<nav><button class="nav active" data-page="home">◫　داشبورد</button><button class="nav" data-page="tasks">✓　کارهای من</button><button class="nav" data-page="assistant">✦　دستیار برنامه‌ریز</button><button class="nav" data-page="study">▦　جدول تحصیلی</button><button class="nav" data-page="reports">▥　گزارش پیشرفت</button></nav>
 <div class="side-note">✦ قدم‌های کوچک، نتیجه‌های بزرگ</div><small class="version">نسخه آزمایشی ۰.۱ · MDS</small></aside>
 <main><header><button id="menu" class="menu">☰</button><div><small id="date"></small><h1 id="title">داشبورد</h1></div><span class="saved" id="saved">● ذخیره روی این دستگاه</span></header>
 <section class="page show" id="home"><div class="hero"><div><span class="tag">✦ فضای شخصی تو</span><h2>امروز رو هوشمندانه<br><em>مدیریت کن.</em></h2><p>کارهایت را مرتب کن، قدم‌به‌قدم جلو برو و پیشرفتت را ببین.</p><button class="primary" data-open="assistant">ساخت برنامه با دستیار ✦</button></div><div class="orb">MDS</div></div>
@@ -17,6 +17,42 @@
 <div class="section-head"><div><h3>برنامه امروز</h3><small>فهرست کارهایی که برای خودت چیدی</small></div><button class="text-button" data-open="tasks">همه کارها ←</button></div><div id="todayTasks" class="task-list"></div><div id="empty" class="empty">هنوز برنامه‌ای نساختی. از دستیار کمک بگیر یا اولین کارتت را اضافه کن.</div></section>
 <section class="page" id="tasks"><div class="section-head"><div><h2>کارهای من</h2><small>کارهایت را ثبت کن و با آرامش انجام بده.</small></div><button id="add" class="primary">＋ کار جدید</button></div><div class="filters"><button class="filter active" data-filter="all">همه</button><button class="filter" data-filter="todo">در انتظار</button><button class="filter" data-filter="done">انجام‌شده</button></div><div id="allTasks" class="task-list"></div></section>
 <section class="page" id="assistant"><div class="assistant-intro"><span class="tag">✦ MDS SMART ASSISTANT</span><h2>فکرت رو بگو، <em>برنامه‌اش با من.</em></h2><p>شرایطت را بنویس؛ دستیار زمان، انرژی، درس و کارهای ثبت‌شده‌ات را بررسی می‌کند و یک برنامه قابل‌تغییر می‌سازد.</p><div class="hint">مثلاً: «فردا امتحان ریاضی دارم، ۹۰ دقیقه وقت دارم و کمی خسته‌ام.»</div></div><div class="chat"><div class="chat-top"><b>✦ دستیار MDS</b><small>دستیار تقویت‌شده · برنامه‌ریز محلی</small></div><div id="messages" class="messages"><div class="bubble bot">سلام! 🌙 امروز چه کارهایی داری و انرژی‌ات چطوره؟</div></div><div class="quick"><button>امروز انرژی‌ام کمه</button><button>برای درس برنامه بده</button><button>فردا امتحان ریاضی دارم</button><button>کارهای امروزمو مرتب کن</button></div><form id="chatForm"><input id="chatInput" placeholder="شرایط امروزت رو بنویس..." required><button class="primary">ارسال</button></form><small class="note">دستیار اکنون درخواست‌ها را تحلیل و برنامه را با زمان و انرژی تو تنظیم می‌کند. برای پاسخ‌های هوش مصنوعی آنلاین، اتصال امن به سرویس هوش مصنوعی لازم است.</small></div></section>
+<section class="page" id="study">
+<div class="study-intro"><span class="tag">✦ MDS STUDY PLANNER</span><h2>جدول درسی هفتگی <em>با برنامه‌ریزی هوشمند</em></h2><p>درس‌ها، تعداد جلسه و زمان آزاد خودت را وارد کن. جدول‌ساز با توجه به سختی، اولویت و نزدیک بودن آزمون‌ها، جلسه‌ها را بین روزها پخش می‌کند.</p></div>
+<div class="study-layout">
+<div class="study-panel">
+<div class="section-head"><div><h3>۱. تنظیم زمان مطالعه</h3><small>زمان واقعی مطالعه در هر روز، بدون احتساب استراحت‌ها</small></div></div>
+<div class="form-grid">
+<label>حداکثر مطالعه روزانه<select id="studyDailyLimit"><option value="60">۱ ساعت</option><option value="90">۱ ساعت و نیم</option><option value="120" selected>۲ ساعت</option><option value="150">۲ ساعت و نیم</option><option value="180">۳ ساعت</option><option value="240">۴ ساعت</option><option value="300">۵ ساعت</option></select></label>
+<label>مدت هر جلسه<select id="studySessionLength"><option value="25">۲۵ دقیقه</option><option value="30">۳۰ دقیقه</option><option value="40">۴۰ دقیقه</option><option value="45" selected>۴۵ دقیقه</option><option value="50">۵۰ دقیقه</option><option value="60">۶۰ دقیقه</option></select></label>
+<label>شروع مطالعه<select id="studyStartTime"><option value="14:00">۱۴:۰۰</option><option value="15:00">۱۵:۰۰</option><option value="16:00" selected>۱۶:۰۰</option><option value="17:00">۱۷:۰۰</option><option value="18:00">۱۸:۰۰</option><option value="19:00">۱۹:۰۰</option></select></label>
+</div>
+<div class="days-picker"><b>روزهای مطالعه</b><div class="day-checks">
+<label><input type="checkbox" name="studyDay" value="sat" checked> شنبه</label><label><input type="checkbox" name="studyDay" value="sun" checked> یکشنبه</label><label><input type="checkbox" name="studyDay" value="mon" checked> دوشنبه</label><label><input type="checkbox" name="studyDay" value="tue" checked> سه‌شنبه</label><label><input type="checkbox" name="studyDay" value="wed" checked> چهارشنبه</label><label><input type="checkbox" name="studyDay" value="thu" checked> پنجشنبه</label><label><input type="checkbox" name="studyDay" value="fri"> جمعه</label>
+</div></div>
+<div class="section-head"><div><h3>۲. درس‌ها و هدف هفتگی</h3><small>برای هر درس، تعداد جلسه و میزان اهمیت را مشخص کن.</small></div></div>
+<form id="subjectForm" class="subject-form">
+<label>نام درس<input id="subjectName" maxlength="35" placeholder="مثلاً ریاضی" required></label>
+<div class="form-grid subject-fields">
+<label>جلسه در هفته<select id="subjectSessions"><option value="1">۱ جلسه</option><option value="2" selected>۲ جلسه</option><option value="3">۳ جلسه</option><option value="4">۴ جلسه</option><option value="5">۵ جلسه</option><option value="6">۶ جلسه</option><option value="7">۷ جلسه</option></select></label>
+<label>سختی درس<select id="subjectDifficulty"><option value="1">آسان</option><option value="2" selected>متوسط</option><option value="3">سخت</option></select></label>
+<label>اولویت<select id="subjectPriority"><option value="1">معمولی</option><option value="2" selected>مهم</option><option value="3">خیلی مهم</option></select></label>
+<label>تاریخ آزمون (اختیاری)<input id="subjectExam" type="date"></label>
+</div>
+<button class="secondary" type="submit">＋ افزودن درس</button>
+</form>
+<div id="subjectList" class="subject-list"><div class="empty">هنوز درسی اضافه نکردی.</div></div>
+<div class="study-actions"><button id="generateStudy" class="primary">✦ ساخت جدول هفتگی</button><button id="clearStudy" class="secondary" type="button">پاک‌کردن جدول</button></div>
+<div id="studyNotice" class="study-notice" role="status">درس‌ها و تنظیمات فقط در همین مرورگر ذخیره می‌شوند.</div>
+</div>
+<div class="study-side">
+<div class="study-tip"><b>جدول‌ساز چطور تصمیم می‌گیرد؟</b><p>درس‌های مهم‌تر و سخت‌تر را زودتر در برنامه قرار می‌دهد، آزمون‌های نزدیک را در اولویت می‌گذارد و تلاش می‌کند جلسه‌های یک درس در روزهای مختلف پخش شوند.</p></div>
+<div class="study-tip"><b>یک نکته برای نتیجه بهتر</b><p>زمان مطالعه روزانه را واقع‌بینانه انتخاب کن. بین جلسه‌ها ۱۰ دقیقه استراحت در نظر گرفته می‌شود تا برنامه فشرده و خسته‌کننده نشود.</p></div>
+</div>
+</div>
+<div class="section-head timetable-heading"><div><h3>۳. جدول هفتگی تو</h3><small>برنامه ساخته‌شده بر اساس اطلاعاتی که وارد کردی</small></div><span id="studyTotal" class="tag">هنوز ساخته نشده</span></div>
+<div id="weeklyTimetable" class="weekly-timetable"><div class="empty">بعد از افزودن درس‌ها، روی «ساخت جدول هفتگی» بزن.</div></div>
+</section>
 <section class="page" id="reports"><div class="section-head"><div><h2>گزارش پیشرفت</h2><small>نگاهی ساده به مسیر امروزت</small></div></div><div class="report"><div><small>نرخ انجام کارها</small><strong id="reportPct">۰٪</strong><p id="reportText">با ثبت اولین کار، گزارش تو اینجا نمایش داده می‌شود.</p></div><div class="ring" id="ring"><span id="ringText">۰٪</span></div></div><h3>ترکیب کارها</h3><div id="categories" class="categories"></div></section>
 <footer>ساخته‌شده برای <b>MDS</b> · برنامه‌ریزی با آرامش، پیشرفت با استمرار</footer>
 </main></div>
