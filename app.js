@@ -29,7 +29,7 @@ function render(){
 function open(page){
   $$('.page').forEach(x=>x.classList.toggle('show',x.id===page));
   $$('.nav').forEach(x=>x.classList.toggle('active',x.dataset.page===page));
-  $('#title').textContent=({home:'داشبورد',tasks:'کارهای من',assistant:'دستیار برنامه‌ریز',reports:'گزارش پیشرفت'})[page];
+  $('#title').textContent=({home:'داشبورد',tasks:'کارهای من',assistant:'دستیار برنامه‌ریز',study:'جدول تحصیلی',reports:'گزارش پیشرفت'})[page];
   $('#sidebar').classList.remove('open');
 }
 $$('[data-page]').forEach(b=>b.onclick=()=>open(b.dataset.page));
@@ -187,3 +187,164 @@ $('#chatForm').onsubmit=e=>{
 $$('.quick button').forEach(b=>b.onclick=()=>{$('#chatInput').value=b.textContent;$('#chatForm').requestSubmit()});
 if('serviceWorker' in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}));
 render();
+
+
+// ===== MDS Weekly Study Planner =====
+const STUDY_KEY='mds-study-planner-v1';
+const studyDayNames={sat:'شنبه',sun:'یکشنبه',mon:'دوشنبه',tue:'سه‌شنبه',wed:'چهارشنبه',thu:'پنجشنبه',fri:'جمعه'};
+let studySubjects=[],studySchedule=[],studySettings={dailyLimit:120,sessionLength:45,startTime:'16:00',days:['sat','sun','mon','tue','wed','thu']};
+try{
+  const savedStudy=JSON.parse(localStorage.getItem(STUDY_KEY)||'{}');
+  if(Array.isArray(savedStudy.subjects))studySubjects=savedStudy.subjects;
+  if(Array.isArray(savedStudy.schedule))studySchedule=savedStudy.schedule;
+  if(savedStudy.settings)studySettings={...studySettings,...savedStudy.settings};
+}catch{}
+function persistStudy(){
+  try{
+    localStorage.setItem(STUDY_KEY,JSON.stringify({subjects:studySubjects,schedule:studySchedule,settings:studySettings}));
+    $('#saved').textContent='● ذخیره شد روی این دستگاه';
+  }catch{$('#studyNotice').textContent='فضای ذخیره‌سازی این مرورگر کافی نیست؛ چند مورد را حذف کن.'}
+}
+function studySettingsFromForm(){
+  return {
+    dailyLimit:Number($('#studyDailyLimit').value),
+    sessionLength:Number($('#studySessionLength').value),
+    startTime:$('#studyStartTime').value,
+    days:$$('input[name="studyDay"]:checked').map(x=>x.value)
+  };
+}
+function renderSubjects(){
+  const host=$('#subjectList');
+  if(!studySubjects.length){host.innerHTML='<div class="empty">هنوز درسی اضافه نکردی.</div>';return}
+  host.innerHTML=studySubjects.map(s=>{
+    const priority=['','معمولی','مهم','خیلی مهم'][s.priority]||'مهم';
+    const difficulty=['','آسان','متوسط','سخت'][s.difficulty]||'متوسط';
+    const exam=s.exam? ' · آزمون '+safe(new Intl.DateTimeFormat('fa-IR',{day:'numeric',month:'short'}).format(new Date(s.exam+'T00:00:00'))):'';
+    return '<div class="subject-row"><div class="subject-main"><b>'+safe(s.name)+'</b><small>'+fa(s.sessions)+' جلسه در هفته · '+difficulty+' · '+priority+exam+'</small></div><button class="delete" type="button" data-subject-remove="'+safe(s.id)+'" aria-label="حذف درس">×</button></div>';
+  }).join('');
+}
+function studyTimeLabel(total){
+  const extra=total>=1440?' (+۱)': '';
+  const n=((total%1440)+1440)%1440;
+  return fa(Math.floor(n/60)).padStart(2,'۰')+':'+fa(n%60).padStart(2,'۰')+extra;
+}
+function studyDurationLabel(minutes){
+  return minutes>=60?fa(Math.floor(minutes/60))+' ساعت'+(minutes%60?' و '+fa(minutes%60)+' دقیقه':''):fa(minutes)+' دقیقه';
+}
+function renderStudySchedule(){
+  const host=$('#weeklyTimetable');
+  const planned=studySchedule.reduce((sum,d)=>sum+(d.sessions||[]).length,0);
+  $('#studyTotal').textContent=planned?fa(planned)+' جلسه برنامه‌ریزی‌شده':'هنوز ساخته نشده';
+  if(!studySchedule.length){
+    host.innerHTML='<div class="empty">بعد از افزودن درس‌ها، روی «ساخت جدول هفتگی» بزن.</div>';return;
+  }
+  host.innerHTML=studySchedule.map(day=>{
+    const sessions=day.sessions||[];
+    const content=sessions.length?sessions.map((s,i)=>{
+      const exam=s.examSoon?'<i class="exam-flag">آزمون نزدیک</i>':'';
+      const duration=studyDurationLabel(s.duration);
+      const br=i<sessions.length-1?'<div class="study-break">☕ ۱۰ دقیقه استراحت</div>':'';
+      return '<div class="study-session"><div class="session-time">'+studyTimeLabel(s.start)+' تا '+studyTimeLabel(s.end)+'</div><b>'+safe(s.name)+'</b><div class="session-meta">'+duration+' · '+safe(s.difficultyLabel)+' · '+safe(s.priorityLabel)+'</div>'+exam+'</div>'+br;
+    }).join(''):'<div class="day-free">🌿 روز آزاد یا زمان جبرانی</div>';
+    return '<article class="day-column"><div class="day-title"><b>'+safe(studyDayNames[day.key]||day.key)+'</b><small>'+fa(sessions.length)+' جلسه · '+studyDurationLabel(day.load||0)+'</small></div>'+content+'</article>';
+  }).join('');
+}
+function initStudyPlanner(){
+  $('#studyDailyLimit').value=String(studySettings.dailyLimit||120);
+  $('#studySessionLength').value=String(studySettings.sessionLength||45);
+  $('#studyStartTime').value=studySettings.startTime||'16:00';
+  $$('input[name="studyDay"]').forEach(x=>x.checked=(studySettings.days||[]).includes(x.value));
+  if(!(studySettings.days||[]).length)$$('input[name="studyDay"]').forEach(x=>{x.checked=x.value!=='fri'});
+  renderSubjects();renderStudySchedule();
+}
+$('#subjectForm').onsubmit=e=>{
+  e.preventDefault();
+  const name=$('#subjectName').value.trim();
+  if(!name)return;
+  if(studySubjects.some(s=>normalize(s.name)===normalize(name))){
+    $('#studyNotice').textContent='این درس از قبل اضافه شده است. برایش جلسه‌های هفتگی را تغییر بده یا نام متفاوتی وارد کن.';return;
+  }
+  studySubjects.push({
+    id:'sub-'+Date.now()+'-'+Math.random().toString(16).slice(2,6),
+    name,sessions:Number($('#subjectSessions').value),
+    difficulty:Number($('#subjectDifficulty').value),
+    priority:Number($('#subjectPriority').value),
+    exam:$('#subjectExam').value
+  });
+  studySchedule=[];$('#subjectForm').reset();
+  $('#subjectSessions').value='2';$('#subjectDifficulty').value='2';$('#subjectPriority').value='2';
+  renderSubjects();renderStudySchedule();persistStudy();
+  $('#studyNotice').textContent='درس اضافه شد. بعد از افزودن همه درس‌ها، جدول هفتگی را بساز.';
+};
+document.addEventListener('click',e=>{
+  const remove=e.target.closest('[data-subject-remove]');
+  if(!remove)return;
+  studySubjects=studySubjects.filter(s=>s.id!==remove.dataset.subjectRemove);
+  studySchedule=[];renderSubjects();renderStudySchedule();persistStudy();
+  $('#studyNotice').textContent='درس حذف شد. برای دیدن برنامه تازه، جدول را دوباره بساز.';
+});
+$('#generateStudy').onclick=()=>{
+  const settings=studySettingsFromForm();
+  if(!studySubjects.length){$('#studyNotice').textContent='اول حداقل یک درس اضافه کن.';return}
+  if(!settings.days.length){$('#studyNotice').textContent='حداقل یک روز برای مطالعه انتخاب کن.';return}
+  if(settings.sessionLength>settings.dailyLimit){$('#studyNotice').textContent='مدت هر جلسه نباید از زمان مطالعه روزانه بیشتر باشد.';return}
+  studySettings=settings;
+  const dayBuckets=settings.days.map(key=>({key,load:0,sessions:[]}));
+  const today=new Date();today.setHours(0,0,0,0);
+  const weight=s=>{
+    let examBoost=0;
+    if(s.exam){
+      const due=new Date(s.exam+'T00:00:00');const days=Math.ceil((due-today)/86400000);
+      if(days>=0&&days<=3)examBoost=22;
+      else if(days<=7&&days>=0)examBoost=14;
+      else if(days<=14&&days>=0)examBoost=6;
+    }
+    return Number(s.priority)*12+Number(s.difficulty)*5+examBoost;
+  };
+  const requests=[];
+  studySubjects.forEach(subject=>{
+    for(let i=0;i<Number(subject.sessions);i++)requests.push({...subject,occurrence:i,score:weight(subject)});
+  });
+  requests.sort((a,b)=>b.score-a.score||a.occurrence-b.occurrence||a.name.localeCompare(b.name,'fa'));
+  const unscheduled=[];
+  requests.forEach(item=>{
+    const eligible=dayBuckets.filter(day=>day.load+settings.sessionLength<=settings.dailyLimit);
+    if(!eligible.length){unscheduled.push(item);return}
+    eligible.sort((a,b)=>{
+      const repeatA=a.sessions.some(s=>s.id===item.id)?1:0;
+      const repeatB=b.sessions.some(s=>s.id===item.id)?1:0;
+      const scoreA=(a.load/settings.dailyLimit)+(repeatA*5)+(a.sessions.length*.04);
+      const scoreB=(b.load/settings.dailyLimit)+(repeatB*5)+(b.sessions.length*.04);
+      return scoreA-scoreB||a.sessions.length-b.sessions.length;
+    });
+    const chosen=eligible[0];
+    chosen.sessions.push({
+      id:item.id,name:item.name,duration:settings.sessionLength,score:item.score,
+      difficultyLabel:['','آسان','متوسط','سخت'][item.difficulty]||'متوسط',
+      priorityLabel:['','معمولی','مهم','خیلی مهم'][item.priority]||'مهم',
+      examSoon:!!item.exam&&Math.ceil((new Date(item.exam+'T00:00:00')-today)/86400000)<=7&&new Date(item.exam+'T00:00:00')>=today
+    });
+    chosen.load+=settings.sessionLength;
+  });
+  const startParts=settings.startTime.split(':').map(Number);
+  const startBase=startParts[0]*60+startParts[1];
+  dayBuckets.forEach(day=>{
+    day.sessions.sort((a,b)=>b.score-a.score||a.name.localeCompare(b.name,'fa'));
+    let cursor=startBase;
+    day.sessions.forEach((s,i)=>{
+      s.start=cursor;s.end=cursor+s.duration;cursor=s.end+(i<day.sessions.length-1?10:0);
+    });
+  });
+  studySchedule=dayBuckets;
+  persistStudy();renderStudySchedule();
+  if(unscheduled.length){
+    $('#studyNotice').textContent='جدول ساخته شد، اما '+fa(unscheduled.length)+' جلسه جا نشد. برای برنامه کامل‌تر، تعداد جلسه‌ها یا مدت هر جلسه را کمتر کن، یا روز دیگری اضافه کن.';
+  }else{
+    $('#studyNotice').textContent='✅ جدول هفتگی با موفقیت ساخته و روی همین دستگاه ذخیره شد. جلسه‌های درس‌های مهم‌تر و آزمون‌های نزدیک‌تر زودتر اولویت گرفته‌اند.';
+  }
+};
+$('#clearStudy').onclick=()=>{
+  studySchedule=[];persistStudy();renderStudySchedule();
+  $('#studyNotice').textContent='جدول پاک شد؛ درس‌ها باقی مانده‌اند و هر زمان خواستی می‌توانی دوباره بسازی.';
+};
+initStudyPlanner();
